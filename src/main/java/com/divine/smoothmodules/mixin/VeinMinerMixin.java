@@ -23,6 +23,10 @@ public class VeinMinerMixin {
             Direction direction,
             CallbackInfoReturnable<Boolean> cir
     ) {
+        if (VeinMinerModule.isBreakingVein()) {
+            return;
+        }
+
         MinecraftClient mc = MinecraftClient.getInstance();
 
         if (mc.world == null) {
@@ -45,6 +49,10 @@ public class VeinMinerMixin {
             Direction direction,
             CallbackInfoReturnable<Boolean> cir
     ) {
+        if (VeinMinerModule.isBreakingVein()) {
+            return;
+        }
+
         if (!cir.getReturnValue()) {
             VeinMinerModule.clear();
             return;
