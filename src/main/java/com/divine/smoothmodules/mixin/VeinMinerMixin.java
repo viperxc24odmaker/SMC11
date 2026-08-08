@@ -18,7 +18,7 @@ public class VeinMinerMixin {
             method = "attackBlock",
             at = @At("HEAD")
     )
-    private void smoothmodules$captureVeinBlocks(
+    private void smoothmodules$checkVeinMiner(
             BlockPos pos,
             Direction direction,
             CallbackInfoReturnable<Boolean> cir
@@ -36,28 +36,7 @@ public class VeinMinerMixin {
         BlockState state = mc.world.getBlockState(pos);
 
         if (VeinMinerModule.isValidBlock(state)) {
-            VeinMinerModule.capture(pos);
+            VeinMinerModule.mineVein(pos);
         }
-    }
-
-    @Inject(
-            method = "attackBlock",
-            at = @At("RETURN")
-    )
-    private void smoothmodules$breakVeinBlocks(
-            BlockPos pos,
-            Direction direction,
-            CallbackInfoReturnable<Boolean> cir
-    ) {
-        if (VeinMinerModule.isBreakingVein()) {
-            return;
-        }
-
-        if (!cir.getReturnValue()) {
-            VeinMinerModule.clear();
-            return;
-        }
-
-        VeinMinerModule.breakCaptured();
     }
 }
