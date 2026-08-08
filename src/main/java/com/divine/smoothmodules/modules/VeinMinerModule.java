@@ -1,9 +1,13 @@
 package com.divine.smoothmodules.modules;
 
+import com.divine.smoothmodules.module.Module;
+import com.divine.smoothmodules.module.ModuleCategory;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,11 +19,15 @@ public class VeinMinerModule extends Module {
     private static final Set<BlockPos> capturedBlocks = new HashSet<>();
 
     public VeinMinerModule() {
-        super("VeinMiner", "Break connected ores and logs");
+        super(
+                "VeinMiner",
+                "Break connected ores and logs",
+                ModuleCategory.PLAYER
+        );
     }
 
     @Override
-    public void onDisable() {
+    protected void onDisable() {
         clear();
     }
 
@@ -32,7 +40,7 @@ public class VeinMinerModule extends Module {
     }
 
     public static void breakCaptured() {
-        if (mc.player == null || mc.interactionManager == null) {
+        if (mc.player == null || mc.interactionManager == null || mc.world == null) {
             clear();
             return;
         }
@@ -44,7 +52,7 @@ public class VeinMinerModule extends Module {
             if (!mc.world.getBlockState(pos).isAir()) {
                 mc.interactionManager.attackBlock(
                         pos,
-                        net.minecraft.util.math.Direction.UP
+                        Direction.UP
                 );
             }
         }
