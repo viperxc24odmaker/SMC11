@@ -2,7 +2,6 @@ package com.divine.smoothmodules.modules;
 
 import com.divine.smoothmodules.module.Module;
 import com.divine.smoothmodules.module.ModuleCategory;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -15,8 +14,9 @@ import java.util.Set;
 public class VeinMinerModule extends Module {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
-
     private static final Set<BlockPos> capturedBlocks = new HashSet<>();
+
+    private static boolean breakingVein = false;
 
     public VeinMinerModule() {
         super(
@@ -29,6 +29,11 @@ public class VeinMinerModule extends Module {
     @Override
     protected void onDisable() {
         clear();
+        breakingVein = false;
+    }
+
+    public static boolean isBreakingVein() {
+        return breakingVein;
     }
 
     public static void capture(BlockPos pos) {
@@ -40,6 +45,10 @@ public class VeinMinerModule extends Module {
     }
 
     public static void breakCaptured() {
+        if (breakingVein) {
+            return;
+        }
+
         if (mc.player == null || mc.interactionManager == null || mc.world == null) {
             clear();
             return;
@@ -48,13 +57,16 @@ public class VeinMinerModule extends Module {
         Set<BlockPos> blocks = new HashSet<>(capturedBlocks);
         clear();
 
-        for (BlockPos pos : blocks) {
-            if (!mc.world.getBlockState(pos).isAir()) {
-                mc.interactionManager.attackBlock(
-                        pos,
-                        Direction.UP
-                );
+        breakingVein = true;
+
+        try {
+            for (BlockPos pos : blocks) {
+                if (!mc.world.getBlockState(pos).isAir()) {
+                    mc.interactionManager.attackBlock(pos, Direction.UP);
+                }
             }
+        } finally {
+            breakingVein = false;
         }
     }
 
