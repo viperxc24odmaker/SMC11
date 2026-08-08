@@ -1,162 +1,92 @@
 package com.divine.smoothmodules.modules;
 
-import com.divine.smoothmodules.module.Module;
-import com.divine.smoothmodules.module.ModuleCategory;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-/**
-
-Breaks connected logs/wood or ores of the same type when you mine one.
-
-Client-side: capped at MAX_BLOCKS within RADIUS to avoid lag/abuse.
-*/
 public class VeinMinerModule extends Module {
 
-private static final int MAX_BLOCKS = 64;
-private static final int RADIUS = 6;
+    private static final MinecraftClient mc = MinecraftClient.getInstance();
 
-private static boolean active = false;
-private static final List<BlockPos> captured = new ArrayList<>();
+    private static final Set<BlockPos> capturedBlocks = new HashSet<>();
 
-public VeinMinerModule() {
-super("VeinMiner", "Break connected logs and ores at once", ModuleCategory.MISC);
-}
+    public VeinMinerModule() {
+        super("VeinMiner", "Break connected ores and logs");
+    }
 
-@Override
-protected void onEnable() {
-active = true;
-}
+    @Override
+    public void onDisable() {
+        clear();
+    }
 
-@Override
-protected void onDisable() {
-active = false;
-captured.clear();
-}
+    public static void capture(BlockPos pos) {
+        capturedBlocks.add(pos.toImmutable());
+    }
 
-public static boolean isActive() {
-return active;
-}
+    public static void clear() {
+        capturedBlocks.clear();
+    }
 
-/**
+    public static void breakCaptured() {
+        if (mc.player == null || mc.interactionManager == null) {
+            clear();
+            return;
+        }
 
-Called before a block breaks: flood-fill connected blocks of the same type.
+        Set<BlockPos> blocks = new HashSet<>(capturedBlocks);
+        clear();
 
-Only logs/wood and ores are allowed to trigger vein mining.
-*/
-public static void capture(BlockPos origin) {
-captured.clear();
+        for (BlockPos pos : blocks) {
+            if (!mc.world.getBlockState(pos).isAir()) {
+                mc.interactionManager.attackBlock(
+                        pos,
+                        net.minecraft.util.math.Direction.UP
+                );
+            }
+        }
+    }
 
-if (!active) return;
+    public static boolean isValidBlock(BlockState state) {
+        return isLog(state) || isOre(state);
+    }
 
-MinecraftClient mc = MinecraftClient.getInstance();
+    private static boolean isLog(BlockState state) {
+        return state.isOf(Blocks.OAK_LOG)
+                || state.isOf(Blocks.SPRUCE_LOG)
+                || state.isOf(Blocks.BIRCH_LOG)
+                || state.isOf(Blocks.JUNGLE_LOG)
+                || state.isOf(Blocks.ACACIA_LOG)
+                || state.isOf(Blocks.DARK_OAK_LOG)
+                || state.isOf(Blocks.MANGROVE_LOG)
+                || state.isOf(Blocks.CHERRY_LOG)
+                || state.isOf(Blocks.PALE_OAK_LOG)
+                || state.isOf(Blocks.CRIMSON_STEM)
+                || state.isOf(Blocks.WARPED_STEM);
+    }
 
-if (mc.world == null || mc.player == null) return;
-
-try {
-BlockState originState = mc.world.getBlockState(origin);
-Block target = originState.getBlock();
-
- if (!isVeinMineable(originState)) {
-     return;
- }
-
- Set<BlockPos> seen = new HashSet<>();
- ArrayDeque<BlockPos> queue = new ArrayDeque<>();
-
- seen.add(origin);
- queue.add(origin);
-
- while (!queue.isEmpty() && captured.size() < MAX_BLOCKS) {
-     BlockPos cur = queue.poll();
-
-     for (int dx = -1; dx <= 1; dx++) {
-         for (int dy = -1; dy <= 1; dy++) {
-             for (int dz = -1; dz <= 1; dz++) {
-
-                 if (dx == 0 && dy == 0 && dz == 0) continue;
-
-                 BlockPos np = cur.add(dx, dy, dz);
-
-                 if (seen.contains(np)) continue;
-
-                 if (np.getManhattanDistance(origin) > RADIUS * 2) continue;
-
-                 if (Math.abs(np.getX() - origin.getX()) > RADIUS
-                         || Math.abs(np.getY() - origin.getY()) > RADIUS
-                         || Math.abs(np.getZ() - origin.getZ()) > RADIUS) {
-                     continue;
-                 }
-
-                 seen.add(np);
-
-                 BlockState state = mc.world.getBlockState(np);
-
-                 // Only continue through the exact same block type.
-                 if (state.getBlock() == target) {
-                     captured.add(np);
-                     queue.add(np);
-
-                     if (captured.size() >= MAX_BLOCKS) {
-                         break;
-                     }
-                 }
-             }
-         }
-     }
- }
-
-} catch (Exception ignored) {
-captured.clear();
-}
-}
-
-/**
-
-Only logs/wood and ores can activate VeinMiner.
-*/
-private static boolean isVeinMineable(BlockState state) {
-return state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.ORES);
-}
-
-/**
-
-Called after the original block has been broken successfully.
-*/
-public static void breakCaptured() {
-if (!active || captured.isEmpty()) return;
-
-MinecraftClient mc = MinecraftClient.getInstance();
-
-if (mc.world == null || mc.player == null || mc.interactionManager == null) {
-captured.clear();
-return;
-}
-
-ClientPlayerInteractionManager interactionManager = mc.interactionManager;
-
-try {
-for (BlockPos pos : new ArrayList<>(captured)) {
-if (!active) break;
-
-     if (mc.world.getBlockState(pos).isAir()) continue;
-
-     interactionManager.attackBlock(pos, mc.player.getHorizontalFacing().getOpposite());
- }
-
-} catch (Exception ignored) {
-} finally {
-captured.clear();
-}
-}
+    private static boolean isOre(BlockState state) {
+        return state.isOf(Blocks.COAL_ORE)
+                || state.isOf(Blocks.DEEPSLATE_COAL_ORE)
+                || state.isOf(Blocks.IRON_ORE)
+                || state.isOf(Blocks.DEEPSLATE_IRON_ORE)
+                || state.isOf(Blocks.COPPER_ORE)
+                || state.isOf(Blocks.DEEPSLATE_COPPER_ORE)
+                || state.isOf(Blocks.GOLD_ORE)
+                || state.isOf(Blocks.DEEPSLATE_GOLD_ORE)
+                || state.isOf(Blocks.REDSTONE_ORE)
+                || state.isOf(Blocks.DEEPSLATE_REDSTONE_ORE)
+                || state.isOf(Blocks.LAPIS_ORE)
+                || state.isOf(Blocks.DEEPSLATE_LAPIS_ORE)
+                || state.isOf(Blocks.DIAMOND_ORE)
+                || state.isOf(Blocks.DEEPSLATE_DIAMOND_ORE)
+                || state.isOf(Blocks.EMERALD_ORE)
+                || state.isOf(Blocks.DEEPSLATE_EMERALD_ORE)
+                || state.isOf(Blocks.NETHER_GOLD_ORE)
+                || state.isOf(Blocks.NETHER_QUARTZ_ORE)
+                || state.isOf(Blocks.ANCIENT_DEBRIS);
+    }
 }
