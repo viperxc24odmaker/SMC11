@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "smoothmodules",
+  "version": "2.3.0",
+  "name": "Smooth Modules",
+  "description": "A clean, VulkanMod-safe modules client: 27 modules in a Dawn-style SC Menu (Right Shift) with profiles and per-module scaling and HUD editor (Right Ctrl). By MakeForge.",
+  "authors": [ "Divine (MakeForge)" ],
+  "contact": {
+    "homepage": "https://viperxc24odmaker.github.io/MakeForge",
+    "sources": "https://github.com/viperxc24odmaker"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [ "com.divine.smoothmodules.SmoothModules" ],
+    "client": [ "com.divine.smoothmodules.SmoothModulesClient" ]
+  },
+  "mixins": [
+    "smoothmodules.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.17.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
