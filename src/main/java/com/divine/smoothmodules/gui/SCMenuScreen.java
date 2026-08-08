@@ -459,7 +459,7 @@ public class SCMenuScreen extends Screen {
 
     @Override
     public boolean charTyped(CharInput input) {
-        char chr = input.character();
+        char chr = (char) input.codepoint();
         if (typingName && nameBuffer.length() < 20 && chr >= 32 && chr != 127) {
             nameBuffer += chr;
             return true;
