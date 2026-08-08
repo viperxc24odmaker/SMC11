@@ -3,6 +3,9 @@ package com.divine.smoothmodules.modules;
 import com.divine.smoothmodules.module.Module;
 import com.divine.smoothmodules.module.ModuleCategory;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.OreBlock;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
@@ -46,8 +49,9 @@ public class VeinMinerModule extends Module {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.world == null || mc.player == null) return;
         try {
-            Block target = mc.world.getBlockState(origin).getBlock();
-            if (target == null) return;
+            BlockState originState = mc.world.getBlockState(origin);
+            Block target = originState.getBlock();
+            if (target == null || !isVeinMineable(originState)) return;
 
             Set<BlockPos> seen = new HashSet<>();
             ArrayDeque<BlockPos> queue = new ArrayDeque<>();
@@ -79,6 +83,11 @@ public class VeinMinerModule extends Module {
         } catch (Exception ignored) {
             captured.clear();
         }
+    }
+
+    /** Only logs/wood and ore blocks can trigger vein mining. */
+    private static boolean isVeinMineable(BlockState state) {
+        return state.isIn(BlockTags.LOGS) || state.getBlock() instanceof OreBlock;
     }
 
     /** Called after the origin block broke successfully: break the captured set. */
