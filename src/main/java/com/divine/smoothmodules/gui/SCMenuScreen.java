@@ -10,6 +10,8 @@ import com.divine.smoothmodules.module.ModuleManager;
 import com.divine.smoothmodules.util.Theme;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -429,7 +431,9 @@ public class SCMenuScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
+        int keyCode = input.key();
+        int scanCode = input.scancode();
         if (listeningKeybind >= 0) {
             if (keyCode != org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
                 KeybindManager.rebind(listeningKeybind, keyCode, scanCode);
@@ -450,16 +454,17 @@ public class SCMenuScreen extends Screen {
             }
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(CharInput input) {
+        char chr = input.character();
         if (typingName && nameBuffer.length() < 20 && chr >= 32 && chr != 127) {
             nameBuffer += chr;
             return true;
         }
-        return super.charTyped(chr, modifiers);
+        return super.charTyped(input);
     }
 
     private void cycleScale(HudModule hm) {

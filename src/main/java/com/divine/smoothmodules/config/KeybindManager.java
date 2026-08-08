@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.InputUtil;
 
 import java.nio.file.Files;
@@ -42,8 +43,8 @@ public final class KeybindManager {
         KeyBinding kb = BINDS[index];
         if (kb == null) return;
         try {
-            kb.setBoundKey(InputUtil.fromKeyCode(keyCode, scanCode));
-            KeyBinding.updateKeyboardsAll();
+            kb.setBoundKey(InputUtil.fromKeyCode(new KeyInput(keyCode, scanCode, 0)));
+            KeyBinding.updateKeysByCode();
             save();
         } catch (Exception ignored) {}
     }
@@ -72,7 +73,7 @@ public final class KeybindManager {
                 String translationKey = root.get(KEYS[i]).getAsString();
                 BINDS[i].setBoundKey(InputUtil.fromTranslationKey(translationKey));
             }
-            KeyBinding.updateKeyboardsAll();
+            KeyBinding.updateKeysByCode();
         } catch (Exception ignored) {}
     }
 }
