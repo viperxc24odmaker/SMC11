@@ -8,13 +8,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
+import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Queue;
 import java.util.Set;
 
 public class VeinMinerModule extends Module {
 
     private static final MinecraftClient mc = MinecraftClient.getInstance();
-    private static final Set<BlockPos> capturedBlocks = new HashSet<>();
 
     private static boolean breakingVein = false;
 
@@ -28,7 +29,6 @@ public class VeinMinerModule extends Module {
 
     @Override
     protected void onDisable() {
-        clear();
         breakingVein = false;
     }
 
@@ -36,38 +36,89 @@ public class VeinMinerModule extends Module {
         return breakingVein;
     }
 
-    public static void capture(BlockPos pos) {
-        capturedBlocks.add(pos.toImmutable());
-    }
-
-    public static void clear() {
-        capturedBlocks.clear();
-    }
-
-    public static void breakCaptured() {
-        if (breakingVein) {
+    public static void mineVein(BlockPos startPos) {
+        if (breakingVein
+                || mc.player == null
+                || mc.world == null
+                || mc.interactionManager == null) {
             return;
         }
 
-        if (mc.player == null || mc.interactionManager == null || mc.world == null) {
-            clear();
+        BlockState startState = mc.world.getBlockState(startPos);
+
+        if (!isValidBlock(startState)) {
             return;
         }
 
-        Set<BlockPos> blocks = new HashSet<>(capturedBlocks);
-        clear();
+        Set<BlockPos> visited = new HashSet<>();
+        Set<BlockPos> vein = new HashSet<>();
+        Queue<BlockPos> queue = new ArrayDeque<>();
+
+        BlockPos start = startPos.toImmutable();
+
+        visited.add(start);
+        queue.add(start);
+
+        int maxBlocks = 64;
+
+        while (!queue.isEmpty() && vein.size() < maxBlocks) {
+            BlockPos current = queue.poll();
+
+            BlockState state = mc.world.getBlockState(current);
+
+            if (!sameVeinType(startState, state)) {
+                continue;
+            }
+
+            vein.add(current);
+
+            for (Direction direction : Direction.values()) {
+                BlockPos next = current.offset(direction);
+
+                if (visited.add(next)) {
+                    queue.add(next.toImmutable());
+                }
+            }
+        }
+
+        vein.remove(start);
+
+        if (vein.isEmpty()) {
+            return;
+        }
 
         breakingVein = true;
 
         try {
-            for (BlockPos pos : blocks) {
-                if (!mc.world.getBlockState(pos).isAir()) {
-                    mc.interactionManager.attackBlock(pos, Direction.UP);
+            for (BlockPos pos : vein) {
+                if (mc.world != null
+                        && !mc.world.getBlockState(pos).isAir()
+                        && mc.interactionManager != null) {
+
+                    mc.interactionManager.attackBlock(
+                            pos,
+                            Direction.UP
+                    );
                 }
             }
         } finally {
             breakingVein = false;
         }
+    }
+
+    private static boolean sameVeinType(
+            BlockState startState,
+            BlockState otherState
+    ) {
+        if (isLog(startState)) {
+            return isLog(otherState);
+        }
+
+        if (isOre(startState)) {
+            return isOre(otherState);
+        }
+
+        return false;
     }
 
     public static boolean isValidBlock(BlockState state) {
