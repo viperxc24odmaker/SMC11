@@ -1,39 +1,55 @@
 package com.divine.smoothmodules.mixin;
 
 import com.divine.smoothmodules.modules.VeinMinerModule;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Hooks block breaking to power VeinMiner. Captures the connected set before the
- * block is gone, then breaks that set after the original break succeeds. A busy
- * flag prevents the extra breaks from re-triggering the vein logic (recursion).
- */
 @Mixin(ClientPlayerInteractionManager.class)
 public class VeinMinerMixin {
 
-    @Unique private static boolean smoothmodules$busy = false;
+    @Inject(
+            method = "attackBlock",
+            at = @At("HEAD")
+    )
+    private void smoothmodules$captureVeinBlocks(
+            BlockPos pos,
+            Direction direction,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        MinecraftClient mc = MinecraftClient.getInstance();
 
-    @Inject(method = "breakBlock", at = @At("HEAD"))
-    private void smoothmodules$capture(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        if (smoothmodules$busy || !VeinMinerModule.isActive()) return;
-        VeinMinerModule.capture(pos);
+        if (mc.world == null) {
+            return;
+        }
+
+        BlockState state = mc.world.getBlockState(pos);
+
+        if (VeinMinerModule.isValidBlock(state)) {
+            VeinMinerModule.capture(pos);
+        }
     }
 
-    @Inject(method = "breakBlock", at = @At("RETURN"))
-    private void smoothmodules$vein(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        if (smoothmodules$busy || !VeinMinerModule.isActive()) return;
-        if (!cir.getReturnValueZ()) { VeinMinerModule.clear(); return; }
-        smoothmodules$busy = true;
-        try {
-            VeinMinerModule.breakCaptured((ClientPlayerInteractionManager) (Object) this);
-        } finally {
-            smoothmodules$busy = false;
+    @Inject(
+            method = "attackBlock",
+            at = @At("RETURN")
+    )
+    private void smoothmodules$breakVeinBlocks(
+            BlockPos pos,
+            Direction direction,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (!cir.getReturnValue()) {
+            VeinMinerModule.clear();
+            return;
         }
+
+        VeinMinerModule.breakCaptured();
     }
 }
