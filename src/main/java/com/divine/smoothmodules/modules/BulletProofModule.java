@@ -27,7 +27,7 @@ public class BulletProofModule extends Module {
 			return;
 		}
 
-		Vec3d currentPos = mc.player.getPos();
+		Vec3d currentPos = mc.player.getEyePos();
 
 		// Detect knockback by comparing positions
 		if (lastPosition != null) {

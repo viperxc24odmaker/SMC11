@@ -82,9 +82,6 @@ public class MinigamesScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
-		if (currentGame == MinigameType.TETRIS) {
-			// Tetris scroll handling
-		}
 		return super.mouseScrolled(mx, my, scrollX, scrollY);
 	}
 
