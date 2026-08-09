@@ -1,5 +1,7 @@
 package com.divine.smoothmodules.mixin;
 
+import com.divine.smoothmodules.module.ModuleManager;
+import com.divine.smoothmodules.module.Module;
 import com.divine.smoothmodules.modules.VeinMinerModule;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -16,14 +18,14 @@ public class VeinMinerMixin {
 
 	@Inject(
 		method = "attackBlock",
-		at = @At("RETURN")
-	)
-	private void smoothmodules$checkVeinMiner(
+private void smoothmodules$checkVeinMiner(
 		BlockPos pos,
 		Direction direction,
 		CallbackInfoReturnable<Boolean> cir
 	) {
-		if (VeinMinerModule.isBreakingVein()) {
+		// Only activate if veinminer module is enabled
+		Module vm = ModuleManager.getByName("VeinMiner");
+		if (vm == null || !vm.isEnabled() || VeinMinerModule.isBreakingVein()) {
 			return;
 		}
 
@@ -36,5 +38,6 @@ public class VeinMinerMixin {
 		if (VeinMinerModule.isValidBlock(state)) {
 			VeinMinerModule.mineVein(pos);
 		}
+	}		}
 	}
 }
