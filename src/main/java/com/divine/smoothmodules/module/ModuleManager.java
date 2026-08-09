@@ -5,6 +5,8 @@ import com.divine.smoothmodules.modules.*;
 import java.util.ArrayList;
 import java.util.List;
 
+// Auto-imported by wildcard: AutoClickerModule, BulletProofModule
+
 /**
  * Holds every module instance and provides lookup / dispatch helpers.
  */
@@ -58,13 +60,15 @@ public final class ModuleManager {
         // Cosmetics (1)
         register(new WingsModule());
 
-        // Misc (2)
+        // Misc (6)
         register(new VeinMinerModule());
         register(new ElytraSwitcherModule());
         register(new HitboxesModule());
         register(new AutoToolModule());
         register(new DurabilityWarningModule());
         register(new InventoryTotemModule());
+        register(new AutoClickerModule());
+        register(new BulletProofModule());
     }
 
     private static void register(Module m) {

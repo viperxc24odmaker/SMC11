@@ -110,15 +110,8 @@ public class VeinMinerModule extends Module {
             BlockState startState,
             BlockState otherState
     ) {
-        if (isLog(startState)) {
-            return isLog(otherState);
-        }
-
-        if (isOre(startState)) {
-            return isOre(otherState);
-        }
-
-        return false;
+        // Must be EXACT same block type, not just any ore or log
+        return startState.getBlock() == otherState.getBlock();
     }
 
     public static boolean isValidBlock(BlockState state) {
