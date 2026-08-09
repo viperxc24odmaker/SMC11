@@ -14,29 +14,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ClientPlayerInteractionManager.class)
 public class VeinMinerMixin {
 
-    @Inject(
-            method = "attackBlock",
-            at = @At("HEAD")
-    )
-    private void smoothmodules$checkVeinMiner(
-            BlockPos pos,
-            Direction direction,
-            CallbackInfoReturnable<Boolean> cir
-    ) {
-        if (VeinMinerModule.isBreakingVein()) {
-            return;
-        }
+	@Inject(
+		method = "attackBlock",
+		at = @At("RETURN")
+	)
+	private void smoothmodules$checkVeinMiner(
+		BlockPos pos,
+		Direction direction,
+		CallbackInfoReturnable<Boolean> cir
+	) {
+		if (VeinMinerModule.isBreakingVein()) {
+			return;
+		}
 
-        MinecraftClient mc = MinecraftClient.getInstance();
+		MinecraftClient mc = MinecraftClient.getInstance();
+		if (mc.world == null) {
+			return;
+		}
 
-        if (mc.world == null) {
-            return;
-        }
-
-        BlockState state = mc.world.getBlockState(pos);
-
-        if (VeinMinerModule.isValidBlock(state)) {
-            VeinMinerModule.mineVein(pos);
-        }
-    }
+		BlockState state = mc.world.getBlockState(pos);
+		if (VeinMinerModule.isValidBlock(state)) {
+			VeinMinerModule.mineVein(pos);
+		}
+	}
 }
